@@ -23,6 +23,7 @@ public final class MinecraftVersion {
 	 * The version wrapper
 	 */
 	public enum V {
+		v1_21(21, false),
 		v1_20(20, false),
 		v1_19(19),
 		v1_18(18),
@@ -163,7 +164,8 @@ public final class MinecraftVersion {
 	static {
 		try {
 
-			final String packageName = Bukkit.getServer() == null ? "" : Bukkit.getServer().getClass().getPackage().getName();
+			final String packageName = Bukkit.getServer() == null ? ""
+					: Bukkit.getServer().getClass().getPackage().getName();
 			final String curr = packageName.substring(packageName.lastIndexOf('.') + 1);
 			final boolean hasGatekeeper = !"craftbukkit".equals(curr) && !"".equals(packageName);
 
@@ -181,16 +183,19 @@ public final class MinecraftVersion {
 
 				final String numericVersion = curr.substring(1, pos - 2).replace("_", ".");
 
-				int found = 0;
-
-				for (final char ch : numericVersion.toCharArray())
-					if (ch == '.')
-						found++;
-
 				current = V.parse(Integer.parseInt(numericVersion.split("\\.")[1]));
+			} else {
+				// On newer Paper versions, the version is not in the package name.
+				// We may have to check the bukkit version instead.
+				if (Bukkit.getServer() != null) {
+					final String[] version = Bukkit.getBukkitVersion().split("-")[0].split("\\.");
+					current = V.parse(Integer.parseInt(version[1]));
+				} else {
+					current = V.v1_3_AND_BELOW;
+				}
+			}
 
-			} else
-				current = V.v1_3_AND_BELOW;
+			Bukkit.getLogger().info("Parsed server version: " + current.toString());
 
 		} catch (final Throwable t) {
 			t.printStackTrace();

@@ -51,7 +51,7 @@ public class SellPriceCommand {
                         return;
                     }
 
-                    IWrappedRegion wrappedRegion = RegionUtils.getFirstRegionAtLocation(c.sender().getLocation());
+                    IWrappedRegion wrappedRegion = RegionUtils.getRegionWithHighestPriority(c.sender().getLocation());
 
                     if (!validateRegion(wrappedRegion)) {
                         PlayerUtils.sendMessage(c.sender(), "&cYou must be standing in a region / specify a valid region!");

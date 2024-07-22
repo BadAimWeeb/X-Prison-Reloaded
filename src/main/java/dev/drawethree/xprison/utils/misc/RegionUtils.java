@@ -5,6 +5,8 @@ import org.codemc.worldguardwrapper.WorldGuardWrapper;
 import org.codemc.worldguardwrapper.flag.IWrappedFlag;
 import org.codemc.worldguardwrapper.region.IWrappedRegion;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -37,11 +39,6 @@ public class RegionUtils {
 			}
 		}
 		return highestPrioRegion;
-	}
-
-	public static IWrappedRegion getFirstRegionAtLocation(Location loc) {
-		Set<IWrappedRegion> regions = WorldGuardWrapper.getInstance().getRegions(loc);
-		return regions.size() == 0 ? null : regions.iterator().next();
 	}
 
 	private RegionUtils() {

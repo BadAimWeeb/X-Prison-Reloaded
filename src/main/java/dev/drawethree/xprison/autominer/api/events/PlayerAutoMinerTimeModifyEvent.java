@@ -14,11 +14,9 @@ public final class PlayerAutoMinerTimeModifyEvent extends XPrisonPlayerEvent {
 	private static final HandlerList handlers = new HandlerList();
 
 	@Getter
-	@Setter
 	private final TimeUnit timeUnit;
 
 	@Getter
-	@Setter
 	private final long duration;
 
 	/**
