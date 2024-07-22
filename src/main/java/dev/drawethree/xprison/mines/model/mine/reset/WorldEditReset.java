@@ -18,19 +18,20 @@ import com.sk89q.worldedit.regions.CuboidRegion;
 
 public class WorldEditReset extends ResetType {
 
-	WorldEditReset() {
-		super("WorldEdit");
-	}
+    WorldEditReset() {
+        super("WorldEdit");
+    }
 
-	@Override
-	public void reset(Mine mine, BlockPalette blockPalette) {
-		if (blockPalette.isEmpty()) {
-			XPrison.getInstance().getLogger().warning("Reset for Mine " + mine.getName() + " aborted. Block palette is empty.");
-			return;
-		}
+    @Override
+    public void reset(Mine mine, BlockPalette blockPalette) {
+        if (blockPalette.isEmpty()) {
+            XPrison.getInstance().getLogger()
+                    .warning("Reset for Mine " + mine.getName() + " aborted. Block palette is empty.");
+            return;
+        }
 
         Position min = mine.getMineRegion().getMin();
-		Position max = mine.getMineRegion().getMax();
+        Position max = mine.getMineRegion().getMax();
 
         World world = Bukkit.getServer().getWorld(min.getWorld());
         com.sk89q.worldedit.world.World weWorld = BukkitAdapter.adapt(world);
@@ -38,29 +39,31 @@ public class WorldEditReset extends ResetType {
         BlockVector3 maxVector = BlockVector3.at(max.getX(), max.getY(), max.getZ());
         CuboidRegion region = new CuboidRegion(weWorld, minVector, maxVector);
 
+        RandomPattern pat = new RandomPattern();
+        for (var mat : blockPalette.getValidMaterials()) {
+            double percentage = blockPalette.getPercentage(mat) / 100;
+            var material = mat.toMaterial();
+
+            var adapt = BukkitAdapter.adapt(material.createBlockData());
+            BlockPattern pattern = new BlockPattern(adapt);
+
+            pat.add(pattern, percentage);
+        }
+
         new Thread(new Runnable() {
-            public void run(){
-                try (EditSession editSession = WorldEdit.getInstance().getEditSessionFactory().getEditSession(weWorld, -1)) {
-                    RandomPattern pat = new RandomPattern();
-                    for (var mat : blockPalette.getValidMaterials()) {
-                        double percentage = blockPalette.getPercentage(mat);
-                        var material = mat.toMaterial();
-        
-                        var adapt = BukkitAdapter.adapt(material.createBlockData());
-                        BlockPattern pattern = new BlockPattern(adapt);
-                        
-                        pat.add(pattern, percentage);
-                    }
-        
+            public void run() {
+                try (EditSession editSession = WorldEdit.getInstance().getEditSessionFactory().getEditSession(
+                        weWorld,
+                        -1)) {
                     editSession.setBlocks(region, pat);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-        
+
                 mine.setResetting(false);
                 mine.updateCurrentBlocks();
                 mine.updateHolograms();
             }
         }).start();
-	}
+    }
 }
