@@ -8,6 +8,7 @@ public abstract class ResetType {
 
 	public static final GradualReset GRADUAL = new GradualReset();
 	public static final InstantReset INSTANT = new InstantReset();
+	public static final WorldEditReset WORLDEDIT = new WorldEditReset();
 
 	@Getter
 	private final String name;
@@ -22,6 +23,8 @@ public abstract class ResetType {
 				return GRADUAL;
 			case "instant":
 				return INSTANT;
+			case "worldedit":
+				return WORLDEDIT;
 		}
 		return null;
 	}

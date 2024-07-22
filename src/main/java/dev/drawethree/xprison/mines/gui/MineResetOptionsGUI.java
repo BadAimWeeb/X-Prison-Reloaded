@@ -29,26 +29,29 @@ public class MineResetOptionsGUI extends Gui {
 			this.mine.getManager().resetMine(this.mine);
 		}));
 
-		this.setItem(13, ItemStackBuilder.of(CompMaterial.COMPARATOR.toItem()).name("&eReset Type: " + this.mine.getResetType().getName()).lore(" ", "&7Instant: Will use more CPU power", "&7but the mine will reset instantly.", " ", "&7Gradual: Will use less CPU power", "&7but mine reset may take more time.", " ", "&aClick &7to change.").build(() -> {
-			if (this.mine.getResetType() == ResetType.GRADUAL) {
-				this.mine.setResetType(ResetType.INSTANT);
-			} else {
+		this.setItem(13, ItemStackBuilder.of(CompMaterial.COMPARATOR.toItem()).name("&eReset type: " + this.mine.getResetType().getName()).lore(" ", "&7Instant: Will use more CPU power", "&7but the mine will reset instantly.", " ", "&7Gradual: Will use less CPU power", "&7but mine reset may take more time.", " ", "&aClick &7to change.").build(() -> {
+			// INSTANT => GRADUAL => WORLDEDIT
+			if (this.mine.getResetType() == ResetType.INSTANT) {
 				this.mine.setResetType(ResetType.GRADUAL);
+			} else if (this.mine.getResetType() == ResetType.GRADUAL) {
+				this.mine.setResetType(ResetType.WORLDEDIT);
+			} else {
+				this.mine.setResetType(ResetType.INSTANT);
 			}
 			this.redraw();
 		}));
 
-		this.setItem(15, ItemStackBuilder.of(CompMaterial.CLOCK.toItem()).name("&eEdit Reset Percentage").lore(" ", "&7Click to edit mine's reset percentage").build(() -> {
+		this.setItem(15, ItemStackBuilder.of(CompMaterial.CLOCK.toItem()).name("&eEdit reset percentage").lore(" ", "&7Click to edit mine's reset percentage").build(() -> {
 			this.close();
 			new MineEditResetPercentageGUI(this.mine, this.getPlayer()).open();
 		}));
 
-		this.setItem(29, ItemStackBuilder.of(CompMaterial.CLOCK.toItem()).name("&eEdit Timed Reset").lore(" ", "&7Click to edit timed reset").build(() -> {
+		this.setItem(29, ItemStackBuilder.of(CompMaterial.CLOCK.toItem()).name("&eEdit timed reset").lore(" ", "&7Click to edit timed reset").build(() -> {
 			this.close();
 			new MineEditTimedResetGUI(this.mine, this.getPlayer()).open();
 		}));
 
-		this.setItem(31, ItemStackBuilder.of(CompMaterial.PAPER.toItem()).name("&eBroadcast Reset: " + this.mine.isBroadcastReset()).lore(" ", "&aTrue &7- All players will get message", "&7on mine's reset.", "&cFalse &7- No broadcast message.").build(() -> {
+		this.setItem(31, ItemStackBuilder.of(CompMaterial.PAPER.toItem()).name("&eBroadcast reset: " + this.mine.isBroadcastReset()).lore(" ", "&aTrue &7- All players will get message", "&7on mine's reset.", "&cFalse &7- No broadcast message.").build(() -> {
 			this.mine.setBroadcastReset(!this.mine.isBroadcastReset());
 			this.redraw();
 		}));
