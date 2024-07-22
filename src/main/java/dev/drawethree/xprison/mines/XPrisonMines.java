@@ -114,7 +114,6 @@ public class XPrisonMines implements XPrisonModule {
 		registerCommand(new MineRedefineCommand(this));
 		registerCommand(new MinePanelCommand(this));
 		registerCommand(new MineTeleportCommand(this));
-		registerCommand(new MineToolCommand(this));
 		registerCommand(new MineHelpCommand(this));
 		registerCommand(new MineResetCommand(this));
 		registerCommand(new MineListCommand(this));

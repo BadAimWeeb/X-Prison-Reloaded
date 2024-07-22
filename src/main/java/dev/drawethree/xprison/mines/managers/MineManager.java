@@ -14,7 +14,6 @@ import dev.drawethree.xprison.mines.model.mine.loader.MineLoader;
 import dev.drawethree.xprison.mines.model.mine.saver.MineFileSaver;
 import dev.drawethree.xprison.mines.model.mine.saver.MineSaver;
 import dev.drawethree.xprison.utils.item.ItemStackBuilder;
-import dev.drawethree.xprison.utils.location.LocationUtils;
 import dev.drawethree.xprison.utils.misc.TimeUtil;
 import dev.drawethree.xprison.utils.player.PlayerUtils;
 import lombok.Getter;
@@ -29,10 +28,13 @@ import me.lucko.helper.serialize.Region;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffectType;
+
+import com.sk89q.worldedit.WorldEdit;
+import com.sk89q.worldedit.bukkit.BukkitAdapter;
+import com.sk89q.worldedit.regions.CuboidRegion;
+import com.sk89q.worldedit.session.SessionManager;
 
 import java.io.File;
 import java.util.*;
@@ -40,8 +42,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public class MineManager {
-
-	public static final ItemStack SELECTION_TOOL = ItemStackBuilder.of(Material.STICK).enchant(Enchantment.UNBREAKING).name("&eMine Selection Tool").lore("&aRight-Click &fto set &aPosition 1 &7(MIN)", "&aLeft-Click &fto set &aPosition 2 &7(MAX)").build();
+	private final SessionManager manager = WorldEdit.getInstance().getSessionManager();
 
 	private final MineLoader mineLoader;
 	private final MineSaver mineSaver;
@@ -49,7 +50,6 @@ public class MineManager {
 	@Getter
 	private final XPrisonMines plugin;
 
-	private final Map<UUID, MineSelection> mineSelections;
 	private Map<String, Mine> mines;
 
 	private List<String> hologramBlocksLeftLines;
@@ -60,7 +60,6 @@ public class MineManager {
 
 	public MineManager(XPrisonMines plugin) {
 		this.plugin = plugin;
-		this.mineSelections = new HashMap<>();
 		this.hologramBlocksLeftLines = this.plugin.getConfig().get().getStringList("holograms.blocks_left");
 		this.hologramBlocksMinedLines = this.plugin.getConfig().get().getStringList("holograms.blocks_mined");
 		this.hologramTimedResetLines = this.plugin.getConfig().get().getStringList("holograms.timed_reset");
@@ -134,34 +133,43 @@ public class MineManager {
 		this.getMines().forEach(this.mineSaver::save);
 	}
 
-	public void selectPosition(Player player, int position, Position pos) {
-
-		MineSelection selection;
-
-		if (!mineSelections.containsKey(player.getUniqueId())) {
-			this.mineSelections.put(player.getUniqueId(), new MineSelection());
-		}
-
-		selection = this.mineSelections.get(player.getUniqueId());
-
-		switch (position) {
-			case 1:
-				selection.setPos1(pos);
-				break;
-			case 2:
-				selection.setPos2(pos);
-				break;
-		}
-
-		if (selection.isValid()) {
-			PlayerUtils.sendMessage(player, this.plugin.getMessage("selection_valid"));
-		}
-
-		PlayerUtils.sendMessage(player, this.plugin.getMessage("selection_point_set").replace("%position%", String.valueOf(position)).replace("%location%", LocationUtils.toXYZW(pos.toLocation())));
-	}
-
 	public MineSelection getMineSelection(Player player) {
-		return this.mineSelections.get(player.getUniqueId());
+		var actor = BukkitAdapter.adapt(player);
+		var localSession = this.manager.get(actor);
+
+		if (localSession == null) {
+			return null;
+		}
+
+		var selectionWorld = localSession.getSelectionWorld();
+		if (selectionWorld == null) {
+			return null;
+		}
+
+		try {
+			var selection = localSession.getSelection(selectionWorld);
+
+			if (!(selection instanceof CuboidRegion)) {
+				PlayerUtils.sendMessage(player, this.plugin.getMessage("selection_invalid_hint_wrong_mode"));
+				return null;
+			}
+
+			var cuboid = (CuboidRegion) selection;
+
+			var pos1 = cuboid.getPos1();
+			var pos2 = cuboid.getPos2();
+
+			if (pos1 == null || pos2 == null) {
+				return null;
+			}
+
+			return new MineSelection(
+				Position.of(pos1.getBlockX(), pos1.getBlockY(), pos1.getBlockZ(), selectionWorld.getName()),
+				Position.of(pos2.getBlockX(), pos2.getBlockY(), pos2.getBlockZ(), selectionWorld.getName())
+			);
+		} catch (Exception e) {
+			return null;
+		}
 	}
 
 	public boolean createMine(Player creator, String name) {
@@ -293,12 +301,6 @@ public class MineManager {
 	public boolean setTeleportLocation(Player player, Mine mine) {
 		mine.setTeleportLocation(Point.of(player.getLocation()));
 		PlayerUtils.sendMessage(player, this.plugin.getMessage("mine_teleport_set").replace("%mine%", mine.getName()));
-		return true;
-	}
-
-	public boolean giveTool(Player sender) {
-		sender.getInventory().addItem(SELECTION_TOOL);
-		PlayerUtils.sendMessage(sender, this.plugin.getMessage("selection_tool_given"));
 		return true;
 	}
 

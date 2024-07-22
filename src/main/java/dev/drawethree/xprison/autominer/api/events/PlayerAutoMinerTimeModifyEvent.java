@@ -2,7 +2,6 @@ package dev.drawethree.xprison.autominer.api.events;
 
 import dev.drawethree.xprison.api.events.player.XPrisonPlayerEvent;
 import lombok.Getter;
-import lombok.Setter;
 import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
